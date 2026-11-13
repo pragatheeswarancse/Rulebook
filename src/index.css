@@ -1,0 +1,82 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    /* Brand & Surface Colors */
+    --color-bg-primary: #FFFFFF;
+    --color-bg-secondary: #F8FAFC;
+    --color-text-primary: #0F172A;
+    --color-text-secondary: #64748B;
+    --color-border: #E2E8F0;
+    --color-action: #2558E8;
+    --color-action-hover: #1D47C5;
+    --color-success: #059669;
+    --color-warning: #D97706;
+    --color-error: #DC2626;
+
+    /* Enterprise Layout & Grid Tokens */
+    --container-max-width: 1280px;
+    --gutter-desktop: 24px;
+    --gutter-tablet: 20px;
+    --gutter-mobile: 16px;
+
+    /* Strict Spacing Scale Tokens */
+    --space-micro: 4px;      /* 4px */
+    --space-standard: 8px;   /* 8px */
+    --space-compact: 12px;   /* 12px */
+    --space-component: 16px; /* 16px */
+    --space-card: 24px;      /* 24px */
+    --space-group: 32px;     /* 32px */
+    --space-sub: 48px;       /* 48px */
+    --space-section-sm: 80px;/* 80px */
+    --space-section-lg: 112px;/* 112px */
+
+    /* Surface & Elevation */
+    --radius-card: 12px;
+    --radius-input: 8px;
+    --radius-button: 8px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Geist", "Inter", "Segoe UI", Roboto, sans-serif;
+    background-color: #FFFFFF;
+    color: #0F172A;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  code, pre, .font-mono {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  /* Accessible focus styling */
+  :focus-visible {
+    outline: 2px solid #2558E8;
+    outline-offset: 2px;
+  }
+}
+
+/* Subtle motion system */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Flowchart signal pulse keyframe */
+@keyframes flowDash {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-flow-dash {
+  animation: flowDash 2s linear infinite;
+}

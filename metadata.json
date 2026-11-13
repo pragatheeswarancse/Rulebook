@@ -1,0 +1,6 @@
+{
+  "name": "Rulebook",
+  "description": "Rulebook - Clean document analyzer and specification engine. Compare original PDFs with extracted text, and generate structured PRD, BRD, FSD, Flowmaps, and LOC/PERT Estimations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
