@@ -202,6 +202,55 @@ export interface DeliveryForecast {
   blockers: string[];
 }
 
+export interface AiFlowchartRole {
+  id: string;
+  name: string;
+  accessSummary: string;
+}
+
+export interface AiFlowchartNode {
+  id: string;
+  roleId: string;
+  stepOrder: number;
+  label: string;
+  sublabel: string;
+  nodeType: 'role_entry' | 'action' | 'decision' | 'outcome' | 'blocked';
+  summary: string;
+  techTouchpoint: string;
+  ruleHint?: string;
+  outcomeState?: string;
+  sourcePage: number;
+}
+
+export interface AiFlowchartEdge {
+  id: string;
+  from: string;
+  to: string;
+  label: string;
+  edgeType: 'normal' | 'allow' | 'deny';
+}
+
+export interface AiFlowchartTokenUsage {
+  promptTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  contextChars?: number;
+}
+
+export interface AiFlowchartData {
+  diagramTitle: string;
+  summary: string;
+  perspective: 'frontend' | 'backend';
+  focusTopic?: string;
+  modelUsed?: string;
+  generatedAt?: string;
+  tokenUsage?: AiFlowchartTokenUsage;
+  stageLabels?: string[];
+  roles: AiFlowchartRole[];
+  nodes: AiFlowchartNode[];
+  edges: AiFlowchartEdge[];
+}
+
 export interface RulebookAnalysis {
   purpose: PurposeUnderstanding;
   roles: AccessRecord[];
@@ -213,6 +262,10 @@ export interface RulebookAnalysis {
   uiPlayground: UIPlaygroundData;
   tasks: TaskItem[];
   forecast: DeliveryForecast;
+  aiFlowcharts?: {
+    frontend?: AiFlowchartData;
+    backend?: AiFlowchartData;
+  };
 }
 
 export interface DocumentVersion {

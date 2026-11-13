@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  Database, 
+import { motion } from 'motion/react';
+import {
   Terminal, 
   Table, 
   Key, 
@@ -17,22 +17,26 @@ import {
   HardDrive,
   Copy,
   Check,
-  Code
+  Code,
+  GitBranch
 } from 'lucide-react';
-import { RulebookProject, RulebookAnalysis } from '../../types/rulebook';
+import { RulebookProject, RulebookAnalysis, AiFlowchartData } from '../../types/rulebook';
+import { PerspectiveFlowchartCanvas } from './PerspectiveFlowchartCanvas';
 
 interface Props {
   project: RulebookProject;
   analysis: RulebookAnalysis;
   onOpenSourcePage: (page: number) => void;
+  onSaveFlowchart?: (perspective: 'frontend' | 'backend', flowchart: AiFlowchartData) => void;
 }
 
 export const BackendPerspectiveView: React.FC<Props> = ({
   project,
   analysis,
-  onOpenSourcePage
+  onOpenSourcePage,
+  onSaveFlowchart
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'stored_procs' | 'schemas' | 'transactions' | 'rbac' | 'workbench'>('stored_procs');
+  const [activeSubTab, setActiveSubTab] = useState<'flowchart' | 'stored_procs' | 'schemas' | 'transactions' | 'rbac' | 'workbench'>('flowchart');
   
   // Interactive Workbench state
   const [selectedProc, setSelectedProc] = useState<string>('Get_Cycle_Count_Utility_Parts_List');
@@ -235,64 +239,73 @@ END;`;
   ];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      
-      {/* Top Banner / Perspective Intro */}
-      <div className="bg-white rounded-xl border border-slate-200/80 p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-2xs">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 text-slate-800 flex items-center justify-center shadow-2xs shrink-0">
-            <Database className="w-5 h-5 stroke-[1.75]" />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
-                Backend Systems &amp; Database Engineering Lens
-              </h2>
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium border border-slate-200/80">
-                SQL Server · EF Core 8 · Dapper
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
-              Concrete backend engineering specifications: stored procedure execution contracts, relational table schemas, transaction isolation levels, SQL user RBAC claims, and interactive SP testbench.
-            </p>
-          </div>
+    <div className="space-y-4 animate-in fade-in duration-200">
+      {/* Borderless Horizontal Sub-tab Rail */}
+      <div className="border-b border-slate-200/90 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+          {[
+            { id: 'flowchart', label: 'AI Flowchart', icon: GitBranch },
+            { id: 'stored_procs', label: 'Stored Procedures', icon: Terminal, count: storedProcedures.length },
+            { id: 'schemas', label: 'Database Schema', icon: Table, count: databaseTables.length },
+            { id: 'transactions', label: 'Transactions & ACID', icon: Cpu, count: 2 },
+            { id: 'rbac', label: 'SQL RBAC & Auth', icon: Lock, count: 4 },
+            { id: 'workbench', label: 'SP Testbench & DDL', icon: Play }
+          ].map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeSubTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveSubTab(tab.id as any)}
+                className={`relative shrink-0 inline-flex items-center gap-2 px-3 py-3 text-xs transition-colors cursor-pointer whitespace-nowrap ${
+                  isActive
+                    ? 'text-slate-900 font-semibold'
+                    : 'text-slate-500 hover:text-slate-800 font-medium'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-[#2558E8]' : 'text-slate-400'}`} />
+                <span>{tab.label}</span>
+                {tab.count !== undefined && (
+                  <span
+                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md tabular-nums ${
+                      isActive
+                        ? 'bg-blue-50 text-[#2558E8] border border-blue-200/70'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+                {isActive && (
+                  <motion.span
+                    layoutId="backend-subtab-indicator"
+                    transition={{ type: 'spring', stiffness: 460, damping: 34 }}
+                    className="absolute inset-x-2 bottom-0 h-[2px] rounded-full bg-[#2558E8]"
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
+
+        <span className="hidden xl:inline-flex items-center shrink-0 text-[11px] font-mono text-slate-400 pl-3 border-l border-slate-200/80">
+          SQL Server · EF Core 8 · Dapper
+        </span>
       </div>
 
-      {/* Sub-tab Navigation - Dedicated Full-width Track */}
-      <div className="bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 shadow-2xs flex flex-wrap items-center gap-1">
-        {[
-          { id: 'stored_procs', label: 'Stored Procedures', icon: Terminal, count: storedProcedures.length },
-          { id: 'schemas', label: 'Database Schema', icon: Table, count: databaseTables.length },
-          { id: 'transactions', label: 'Transactions & ACID', icon: Cpu, count: 2 },
-          { id: 'rbac', label: 'SQL RBAC & Auth', icon: Lock, count: 4 },
-          { id: 'workbench', label: 'SP Testbench & DDL', icon: Play }
-        ].map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeSubTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveSubTab(tab.id as any)}
-              className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50 font-medium'
-              }`}
-            >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-900' : 'text-slate-500'}`} />
-              <span>{tab.label}</span>
-              {tab.count !== undefined && (
-                <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
-                  isActive ? 'bg-slate-100 text-slate-700' : 'text-slate-400'
-                }`}>
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* =====================================================================
+          SUB-TAB 0: AI ARCHITECTURE FLOWCHART (GEMINI MAIN CHARACTER)
+         ===================================================================== */}
+      {activeSubTab === 'flowchart' && (
+        <PerspectiveFlowchartCanvas
+          project={project}
+          analysis={analysis}
+          perspective="backend"
+          onOpenSourcePage={onOpenSourcePage}
+          onSaveFlowchart={(persp, fc) => onSaveFlowchart?.(persp, fc)}
+        />
+      )}
 
       {/* =====================================================================
           SUB-TAB 1: STORED PROCEDURES SPECIFICATION

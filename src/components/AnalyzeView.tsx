@@ -27,7 +27,8 @@ import {
   ClarificationQuestion, 
   QuestionState, 
   ApprovedBaseline,
-  PerspectiveType
+  PerspectiveType,
+  AiFlowchartData
 } from '../types/rulebook';
 import { PurposeOverviewSection } from './analyze/PurposeOverviewSection';
 import { RolesAccessSection } from './analyze/RolesAccessSection';
@@ -215,6 +216,23 @@ export const AnalyzeView: React.FC<Props> = ({
     });
   };
 
+  const handleSaveFlowchart = (perspective: 'frontend' | 'backend', flowchart: AiFlowchartData) => {
+    const updatedVersion = {
+      ...currentVersion,
+      analysis: {
+        ...analysis,
+        aiFlowcharts: {
+          ...(analysis.aiFlowcharts || {}),
+          [perspective]: flowchart
+        }
+      }
+    };
+    onUpdateProject({
+      ...project,
+      versions: project.versions.map(v => v.versionId === currentVersion.versionId ? updatedVersion : v)
+    });
+  };
+
   const handleUpdateCapacity = (engineersCount: number, bufferPercent: number) => {
     const updatedForecast = {
       ...analysis.forecast,
@@ -302,7 +320,7 @@ export const AnalyzeView: React.FC<Props> = ({
   ];
 
   return (
-    <div className="space-y-6 max-w-[1440px] mx-auto py-2 animate-in fade-in duration-150">
+    <div className="space-y-3 max-w-[1440px] mx-auto py-1 animate-in fade-in duration-150">
       
       {/* Perspective Modal */}
       <PerspectiveSelectorModal
@@ -313,87 +331,80 @@ export const AnalyzeView: React.FC<Props> = ({
         projectName={project.name}
       />
 
-      {/* Project Context Header */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 sm:p-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] flex flex-col md:flex-row md:items-center justify-between gap-4">
-        
-        {/* Left: Project Identity & Document Metadata */}
-        <div className="flex items-start sm:items-center gap-3.5 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-[#0F172A] text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0 border border-slate-700">
+      {/* Clean Borderless Project Context Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-0.5 pt-1">
+        {/* Left: Compact Project Identity */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-lg bg-[#0F172A] text-white flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
             {project.name.slice(0, 2).toUpperCase()}
           </div>
-          
-          <div className="min-w-0 space-y-1">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-lg sm:text-xl font-semibold text-[#0F172A] tracking-tight truncate max-w-lg" title={project.name}>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base sm:text-lg font-semibold text-[#0F172A] tracking-tight truncate max-w-md" title={project.name}>
                 {project.name}
               </h1>
-              
-              <span className="text-[11px] font-mono text-[#64748B] bg-slate-100 border border-slate-200/80 px-2 py-0.5 rounded font-medium">
-                v{project.latestVersion}
+              <span className="text-[11px] font-mono text-slate-500 bg-slate-100 border border-slate-200/70 px-1.5 py-0.5 rounded">
+                v{project.latestVersion.replace(/^v+/i, '')}
               </span>
-
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${
-                project.status === 'approved_baseline'
-                  ? 'bg-emerald-50 text-[#059669] border-emerald-200/80'
-                  : 'bg-amber-50 text-[#D97706] border-amber-200/80'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${
-                  project.status === 'approved_baseline' ? 'bg-[#059669]' : 'bg-[#D97706]'
-                }`} />
-                <span>{project.status === 'approved_baseline' ? 'Baseline Approved' : 'Review Pending'}</span>
+              <span
+                className={`inline-flex items-center gap-1 text-[11px] font-medium ${
+                  project.status === 'approved_baseline' ? 'text-[#059669]' : 'text-amber-700'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    project.status === 'approved_baseline' ? 'bg-[#059669]' : 'bg-amber-500'
+                  }`}
+                />
+                <span>{project.status === 'approved_baseline' ? 'Approved' : 'Pending'}</span>
               </span>
             </div>
 
-            <div className="flex items-center gap-2.5 text-xs text-[#64748B] flex-wrap font-sans">
-              <span className="font-medium text-[#0F172A]">{project.domain}</span>
-              <span className="text-slate-300">·</span>
-              <span className="flex items-center gap-1 truncate max-w-[280px]" title={currentVersion.fileName}>
-                <FileText className="w-3.5 h-3.5 text-[#2558E8] shrink-0" />
-                <span className="truncate">{currentVersion.fileName}</span>
-              </span>
+            <div className="flex items-center gap-2 text-xs text-[#64748B] mt-0.5">
+              <span>{project.domain}</span>
               <span className="text-slate-300">·</span>
               <span className="font-mono text-[11px]">{currentVersion.pageCount || 1} pages</span>
             </div>
           </div>
         </div>
 
-        {/* Right: Active Perspective Indicator & Quick Actions */}
+        {/* Right: Active Perspective Switcher & Document Reader */}
         <div className="flex flex-wrap items-center gap-2 self-start md:self-auto shrink-0">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs">
-            <span className="text-slate-500 font-medium">Perspective:</span>
-            <span className="font-semibold text-slate-900 flex items-center gap-1.5">
-              {activePerspective === 'frontend' && <><Laptop className="w-3.5 h-3.5 text-slate-700" /> Frontend Lens</>}
-              {activePerspective === 'backend' && <><Database className="w-3.5 h-3.5 text-slate-700" /> Backend Lens</>}
-              {activePerspective === 'manager' && <><Briefcase className="w-3.5 h-3.5 text-slate-700" /> PO / Lead Lens</>}
-              {activePerspective === 'granular' && <><Layers className="w-3.5 h-3.5 text-slate-700" /> Deep Dive Spec</>}
-            </span>
-          </div>
-
           <button
+            type="button"
             onClick={() => setIsPerspectiveModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
-            title="Switch engineering lens"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-xs transition-colors cursor-pointer shadow-2xs"
+            title="Switch engineering perspective"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#2558E8]" />
-            <span>Switch</span>
+            <span className="text-slate-500 font-medium">Perspective:</span>
+            <span className="font-semibold text-slate-900 inline-flex items-center gap-1.5">
+              {activePerspective === 'frontend' && <><Laptop className="w-3.5 h-3.5 text-[#2558E8]" /> Frontend</>}
+              {activePerspective === 'backend' && <><Database className="w-3.5 h-3.5 text-[#2558E8]" /> Backend</>}
+              {activePerspective === 'manager' && <><Briefcase className="w-3.5 h-3.5 text-[#2558E8]" /> PO / Lead</>}
+              {activePerspective === 'granular' && <><Layers className="w-3.5 h-3.5 text-[#2558E8]" /> Deep Dive</>}
+            </span>
+            <span className="text-[11px] font-medium text-[#2558E8] pl-1.5 border-l border-slate-200">
+              Switch
+            </span>
           </button>
 
           <button
+            type="button"
             onClick={onOpenReader}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-[#E2E8F0] rounded-lg transition-colors cursor-pointer shadow-2xs"
-            title="Inspect source document in side-by-side reader"
+            title={`Inspect ${currentVersion.fileName} in side-by-side reader`}
           >
-            <Eye className="w-3.5 h-3.5 text-slate-600" />
-            <span>Document Reader</span>
+            <Eye className="w-3.5 h-3.5 text-slate-500" />
+            <span>Reader</span>
           </button>
         </div>
-
       </div>
 
       {/* =========================================================================
           VIEW ROUTER: PERSPECTIVE VIEW OR GRANULAR SUB-VIEWS
          ========================================================================= */}
-      <div className="pt-1">
+      <div>
         
         {/* PERSPECTIVE 1: Frontend View */}
         {activePerspective === 'frontend' && (
@@ -401,6 +412,7 @@ export const AnalyzeView: React.FC<Props> = ({
             project={project}
             analysis={analysis}
             onOpenSourcePage={onOpenSourcePage}
+            onSaveFlowchart={handleSaveFlowchart}
           />
         )}
 
@@ -410,6 +422,7 @@ export const AnalyzeView: React.FC<Props> = ({
             project={project}
             analysis={analysis}
             onOpenSourcePage={onOpenSourcePage}
+            onSaveFlowchart={handleSaveFlowchart}
           />
         )}
 
